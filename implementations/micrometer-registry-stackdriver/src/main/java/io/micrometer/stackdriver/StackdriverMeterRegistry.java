@@ -51,8 +51,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.google.api.MetricDescriptor.MetricKind.CUMULATIVE;
-import static com.google.api.MetricDescriptor.MetricKind.DELTA;
+import static com.google.api.MetricDescriptor.MetricKind.*;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.StreamSupport.stream;
@@ -309,7 +308,7 @@ public class StackdriverMeterRegistry extends StepMeterRegistry {
         }
 
         TimeSeries createTimeSeries(Meter meter, double value, @Nullable String statistic) {
-            return createTimeSeries(meter, value, statistic, MetricDescriptor.MetricKind.GAUGE);
+            return createTimeSeries(meter, value, statistic, GAUGE);
         }
 
         TimeSeries createTimeSeries(Meter meter, double value, @Nullable String statistic, MetricDescriptor.MetricKind metricKind) {
@@ -348,11 +347,14 @@ public class StackdriverMeterRegistry extends StepMeterRegistry {
 
         private TimeSeries createTimeSeries(Meter.Id id, TypedValue typedValue, MetricDescriptor.ValueType valueType,
                                             @Nullable String statistic) {
-            return createTimeSeries(id, typedValue, valueType, statistic, MetricDescriptor.MetricKind.GAUGE);
+            return createTimeSeries(id, typedValue, valueType, statistic, GAUGE);
         }
 
         private TimeSeries createTimeSeries(Meter.Id id, TypedValue typedValue, MetricDescriptor.ValueType valueType,
                                             @Nullable String statistic, MetricDescriptor.MetricKind metricKind) {
+            if(!config.enabledCumulativeMetric())
+                metricKind = GAUGE;
+
             MetricDescriptor.MetricKind backendMetricKind = metricKind;
             if (client != null)
                 backendMetricKind = createMetricDescriptorIfNecessary(client, id, valueType, statistic, metricKind);
@@ -361,7 +363,7 @@ public class StackdriverMeterRegistry extends StepMeterRegistry {
 
             if (!metricKind.equals(backendMetricKind)) {
                 logger.trace("MetricKind configured in Stackdriver ({}) is not matching the one expected by Micrometer for that kind of Meter ({})." +
-                        "Using Stackdriver's value. Consider deleting MetricDescriptor {} and allowing Micrometer to recreate it.",
+                                "Using Stackdriver's value. Consider deleting MetricDescriptor {} and allowing Micrometer to recreate it.",
                         backendMetricKind, metricKind, metricType);
             }
 

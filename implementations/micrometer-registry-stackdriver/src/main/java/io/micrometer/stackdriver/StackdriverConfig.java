@@ -31,6 +31,7 @@ import java.util.Map;
 
 import static io.micrometer.core.instrument.config.MeterRegistryConfigValidator.checkAll;
 import static io.micrometer.core.instrument.config.MeterRegistryConfigValidator.checkRequired;
+import static io.micrometer.core.instrument.config.validate.PropertyValidator.getBoolean;
 import static io.micrometer.core.instrument.config.validate.PropertyValidator.getString;
 
 /**
@@ -88,6 +89,13 @@ public interface StackdriverConfig extends StepRegistryConfig {
                     }
                 })
                 .get();
+    }
+
+    /**
+     * Enable this value to `true` if you want to send CUMULATIVE metrics
+     */
+    default boolean enabledCumulativeMetric() {
+        return getBoolean(this, "enabledCumulativeMetric").orElse(false);
     }
 
     @Override
